@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Balloons</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #87ceeb;
+    }
+
+    .landing-page {
+      width: 100%;
+      min-height: 100vh;
+      min-height: 100svh;
+      position: relative;
+
+      background-image: url("bg padang.jpg");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo {
+      position: absolute;
+      top: 32px;
+      left: 42px;
+
+      color: white;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .content {
+      text-align: center;
+      padding: 80px 20px;
+    }
+
+    .content p {
+      color: #111;
+      font-size: clamp(20px, 2.7vw, 34px);
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .content h1 {
+      color: #111;
+      font-size: clamp(52px, 8.3vw, 108px);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -2px;
+      margin-bottom: 30px;
+    }
+
+    .start-button {
+      display: inline-block;
+      padding: 10px 32px;
+
+      border: none;
+      border-radius: 50px;
+      background-color: #ffdc45;
+      color: #171717;
+
+      font-family: inherit;
+      font-size: 20px;
+      font-weight: 600;
+      cursor: pointer;
+
+      transition: background-color 0.2s;
+    }
+
+    .start-button:hover {
+      background-color: #ffe875;
+    }
+
+    .start-button:focus-visible {
+      outline: 3px solid #171717;
+      outline-offset: 5px;
+    }
+
+    .balloon-layer {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    .cursor-balloon {
+      position: absolute;
+      width: var(--size);
+      height: calc(var(--size) * 1.28);
+      border-radius: 50% 50% 47% 47%;
+
+      background:
+        radial-gradient(
+          ellipse at 30% 25%,
+          rgba(255, 255, 255, 0.75),
+          transparent 40%
+        ),
+        var(--balloon-color);
+
+      box-shadow: inset -3px -4px 6px rgba(0, 0, 0, 0.12);
+      animation: balloon-float 2s ease-out forwards;
+    }
+
+    .cursor-balloon::before {
+      content: "";
+      position: absolute;
+      bottom: -4px;
+      left: 50%;
+      transform: translateX(-50%);
+
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-bottom: 6px solid var(--balloon-color);
+    }
+
+    .cursor-balloon::after {
+      content: "";
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 50%;
+
+      width: 1px;
+      height: 25px;
+      background: rgba(255, 255, 255, 0.85);
+    }
+
+    @keyframes balloon-float {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.4);
+      }
+
+      15% {
+        opacity: 1;
+      }
+
+      100% {
+        opacity: 0;
+        transform:
+          translate(
+            calc(-50% + var(--drift)),
+            -200px
+          )
+          rotate(var(--rotation))
+          scale(1);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .logo {
+        top: 24px;
+        left: 24px;
+      }
+
+      .content h1 {
+        letter-spacing: -1px;
+      }
+
+      .start-button {
+        font-size: 18px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .cursor-balloon {
+        display: none;
+      }
+
+      .start-button {
+        transition: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="landing-page">
+    <div class="logo">BALLOONS</div>
+
+    <div class="content">
+      <p>LET’S BLOW UP SOME</p>
+      <h1>BALLOONS!</h1>
+
+      <button class="start-button" type="button">
+        Let’s Go!
+      </button>
+    </div>
+  </main>
+
+  <div
+    class="balloon-layer"
+    id="balloon-layer"
+    aria-hidden="true"
+  ></div>
+
+  <script>
+    const balloonLayer = document.getElementById("balloon-layer");
+
+    const balloonColors = [
+      "#ff5c8a",
+      "#ffca3a",
+      "#8ac926",
+      "#35baff",
+      "#b76cff",
+      "#ff914d"
+    ];
+
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    );
+
+    let lastBalloonTime = 0;
+
+    document.addEventListener("pointermove", function (event) {
+      if (event.pointerType === "touch" || reducedMotion.matches) {
+        return;
+      }
+
+      const now = performance.now();
+
+      if (now - lastBalloonTime < 65) {
+        return;
+      }
+
+      lastBalloonTime = now;
+
+      const balloon = document.createElement("div");
+      balloon.className = "cursor-balloon";
+
+      const color = balloonColors[
+        Math.floor(Math.random() * balloonColors.length)
+      ];
+
+      const size = 18 + Math.random() * 14;
+      const drift = Math.random() * 100 - 50;
+      const rotation = Math.random() * 40 - 20;
+
+      balloon.style.left = event.clientX + "px";
+      balloon.style.top = event.clientY + "px";
+
+      balloon.style.setProperty("--balloon-color", color);
+      balloon.style.setProperty("--size", size + "px");
+      balloon.style.setProperty("--drift", drift + "px");
+      balloon.style.setProperty("--rotation", rotation + "deg");
+
+      balloonLayer.appendChild(balloon);
+
+      balloon.addEventListener(
+        "animationend",
+        function () {
+          balloon.remove();
+        },
+        { once: true }
+      );
+    });
+
+    reducedMotion.addEventListener("change", function (event) {
+      if (event.matches) {
+        balloonLayer.replaceChildren();
+      }
+    });
+  </script>
+</body>
+</html>
